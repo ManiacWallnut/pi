@@ -243,7 +243,10 @@ export function formatResumeCommand(sessionManager: SessionManager): string | un
 	const sessionFile = sessionManager.getSessionFile();
 	if (!sessionFile || !fs.existsSync(sessionFile)) return undefined;
 
-	const args = [APP_NAME];
+	// Launchers that wrap this CLI under their own command name (e.g. a project
+	// entry script) set PI_RESUME_APP_NAME so the hint matches how the user
+	// actually started the session, instead of the raw binary name.
+	const args = [process.env.PI_RESUME_APP_NAME || APP_NAME];
 	if (!sessionManager.usesDefaultSessionDir()) {
 		args.push("--session-dir", quoteIfNeeded(sessionManager.getSessionDir()));
 	}

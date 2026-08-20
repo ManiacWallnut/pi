@@ -8,12 +8,18 @@ import { formatResumeCommand } from "../src/modes/interactive/interactive-mode.t
 
 const tempDirs: string[] = [];
 const originalStdoutIsTTY = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+const originalResumeAppName = process.env.PI_RESUME_APP_NAME;
 
 afterEach(() => {
 	if (originalStdoutIsTTY) {
 		Object.defineProperty(process.stdout, "isTTY", originalStdoutIsTTY);
 	} else {
 		Reflect.deleteProperty(process.stdout, "isTTY");
+	}
+	if (originalResumeAppName === undefined) {
+		delete process.env.PI_RESUME_APP_NAME;
+	} else {
+		process.env.PI_RESUME_APP_NAME = originalResumeAppName;
 	}
 
 	for (const dir of tempDirs.splice(0)) {
@@ -56,6 +62,31 @@ describe("formatResumeCommand", () => {
 		const sessionManager = createSessionManager({ sessionFile, sessionId: "test-session" });
 
 		expect(formatResumeCommand(sessionManager)).toBe(`${APP_NAME} --session test-session`);
+	});
+
+	it("uses PI_RESUME_APP_NAME as the command prefix when set", () => {
+		process.env.PI_RESUME_APP_NAME = "personal-agent-lab";
+		setStdoutIsTTY(true);
+		const sessionFile = createTempFile();
+		const sessionManager = createSessionManager({ sessionFile, sessionId: "test-session" });
+
+		expect(formatResumeCommand(sessionManager)).toBe(`personal-agent-lab --session test-session`);
+	});
+
+	it("keeps a custom session dir when PI_RESUME_APP_NAME overrides the prefix", () => {
+		process.env.PI_RESUME_APP_NAME = "personal-agent-lab";
+		setStdoutIsTTY(true);
+		const sessionFile = createTempFile();
+		const sessionManager = createSessionManager({
+			sessionFile,
+			sessionId: "test-session",
+			sessionDir: "/tmp/custom pi sessions",
+			usesDefaultSessionDir: false,
+		});
+
+		expect(formatResumeCommand(sessionManager)).toBe(
+			`personal-agent-lab --session-dir '/tmp/custom pi sessions' --session test-session`,
+		);
 	});
 
 	it("includes unquoted safe session dirs for non-default session dirs", () => {
