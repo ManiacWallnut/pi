@@ -250,7 +250,9 @@ export function formatResumeCommand(sessionManager: SessionManager): string | un
 	if (!sessionManager.usesDefaultSessionDir()) {
 		args.push("--session-dir", quoteIfNeeded(sessionManager.getSessionDir()));
 	}
-	args.push("--session", sessionManager.getSessionId());
+	// PI_RESUME_HINT_FLAG lets a wrapper advertise its own resume flag (e.g.
+	// `--resume <id>`) when the wrapper translates it back to `--session`.
+	args.push(process.env.PI_RESUME_HINT_FLAG || "--session", sessionManager.getSessionId());
 	return args.join(" ");
 }
 
