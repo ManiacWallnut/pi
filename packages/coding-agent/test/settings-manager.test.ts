@@ -289,35 +289,35 @@ describe("SettingsManager", () => {
 	});
 
 	describe("project settings directory creation", () => {
-		it("should not create .pi folder when only reading project settings", () => {
-			// Create agent dir with global settings, but NO .pi folder in project
+		it("should not create .pal folder when only reading project settings", () => {
+			// Create agent dir with global settings, but NO .pal folder in project
 			const settingsPath = join(agentDir, "settings.json");
 			writeFileSync(settingsPath, JSON.stringify({ theme: "dark" }));
 
-			// Delete the .pi folder that beforeEach created
+			// Delete the .pal folder that beforeEach created
 			rmSync(join(projectDir, CONFIG_DIR_NAME), { recursive: true });
 
 			// Create SettingsManager (reads both global and project settings)
 			const manager = SettingsManager.create(projectDir, agentDir);
 
-			// .pi folder should NOT have been created just from reading
+			// .pal folder should NOT have been created just from reading
 			expect(existsSync(join(projectDir, CONFIG_DIR_NAME))).toBe(false);
 
 			// Settings should still be loaded from global
 			expect(manager.getTheme()).toBe("dark");
 		});
 
-		it("should create .pi folder when writing project settings", async () => {
-			// Create agent dir with global settings, but NO .pi folder in project
+		it("should create .pal folder when writing project settings", async () => {
+			// Create agent dir with global settings, but NO .pal folder in project
 			const settingsPath = join(agentDir, "settings.json");
 			writeFileSync(settingsPath, JSON.stringify({ theme: "dark" }));
 
-			// Delete the .pi folder that beforeEach created
+			// Delete the .pal folder that beforeEach created
 			rmSync(join(projectDir, CONFIG_DIR_NAME), { recursive: true });
 
 			const manager = SettingsManager.create(projectDir, agentDir);
 
-			// .pi folder should NOT exist yet
+			// .pal folder should NOT exist yet
 			expect(existsSync(join(projectDir, CONFIG_DIR_NAME))).toBe(false);
 
 			// Write a project-specific setting

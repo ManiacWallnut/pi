@@ -10,6 +10,7 @@ import { SessionManager } from "../src/core/session-manager.ts";
 import { SettingsManager } from "../src/core/settings-manager.ts";
 import type { Skill } from "../src/core/skills.ts";
 import { createSyntheticSourceInfo } from "../src/core/source-info.ts";
+import { CONFIG_DIR_NAME } from "../src/config.ts";
 
 import { createModelRegistry } from "./model-runtime-test-utils.ts";
 
