@@ -57,7 +57,7 @@ import {
 	VERSION,
 } from "../../config.ts";
 import { type AgentSession, type AgentSessionEvent, parseSkillBlock } from "../../core/agent-session.ts";
-import { type AgentSessionRuntime, SessionImportFileNotFoundError } from "../../core/agent-session-runtime.ts";
+import { type AgentSessionRuntime, SessionImportFileNotFoundError, SessionImportInvalidError } from "../../core/agent-session-runtime.ts";
 import {
 	CACHE_TTL_MS,
 	type CacheMiss,
@@ -5808,6 +5808,11 @@ export class InteractiveMode {
 				return;
 			}
 			if (error instanceof SessionImportFileNotFoundError) {
+				this.showError(`Failed to import session: ${error.message}`);
+				return;
+			}
+			if (error instanceof SessionImportInvalidError) {
+				// Bad user input (e.g. an HTML export or foreign JSONL) is not fatal.
 				this.showError(`Failed to import session: ${error.message}`);
 				return;
 			}

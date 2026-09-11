@@ -53,6 +53,37 @@ export class SessionImportFileNotFoundError extends Error {
 	}
 }
 
+/**
+ * Thrown when /import references a file that exists but does not parse as a
+ * pi session (e.g. an HTML export or a truncated/foreign JSONL). Non-fatal:
+ * bad user input must not take down the process.
+ */
+export class SessionImportInvalidError extends Error {
+	readonly filePath: string;
+
+	constructor(filePath: string, cause: string) {
+		super(cause);
+		this.name = "SessionImportInvalidError";
+		this.filePath = filePath;
+	}
+}
+
+/**
+ * Open an imported session file, converting parse/validation failures into
+ * {@link SessionImportInvalidError} so callers can treat them as bad user
+ * input instead of fatal runtime errors.
+ */
+function openImportedSessionManager(destinationPath: string, sessionDir: string, cwdOverride?: string): SessionManager {
+	try {
+		return SessionManager.open(destinationPath, sessionDir, cwdOverride);
+	} catch (error) {
+		throw new SessionImportInvalidError(
+			destinationPath,
+			error instanceof Error ? error.message : String(error),
+		);
+	}
+}
+
 function extractUserMessageText(content: string | Array<{ type: string; text?: string }>): string {
 	if (typeof content === "string") {
 		return content;
@@ -380,7 +411,7 @@ export class AgentSessionRuntime {
 			copyFileSync(resolvedPath, destinationPath);
 		}
 
-		const sessionManager = SessionManager.open(destinationPath, sessionDir, cwdOverride);
+		const sessionManager = openImportedSessionManager(destinationPath, sessionDir, cwdOverride);
 		assertSessionCwdExists(sessionManager, this.cwd);
 		await this.teardownCurrent("resume", sessionManager.getSessionFile());
 		this.apply(

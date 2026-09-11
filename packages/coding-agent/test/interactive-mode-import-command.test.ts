@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SessionImportFileNotFoundError } from "../src/core/agent-session-runtime.ts";
+import { SessionImportFileNotFoundError, SessionImportInvalidError } from "../src/core/agent-session-runtime.ts";
 import { InteractiveMode } from "../src/modes/interactive/interactive-mode.ts";
 
 type PathCommand = "/export" | "/import";
@@ -138,6 +138,38 @@ describe("InteractiveMode /import parsing", () => {
 
 		expect(showError).toHaveBeenCalledWith("Failed to import session: File not found: /tmp/missing-session.jsonl");
 		expect(showStatus).not.toHaveBeenCalled();
+		expect(handleFatalRuntimeError).not.toHaveBeenCalled();
+	});
+
+	it("shows a non-fatal error when the imported file is not a valid session (e.g. an HTML export)", async () => {
+		const importFromJsonl = vi.fn(async () => {
+			throw new SessionImportInvalidError("/tmp/export.html", "Session file is not a valid pi session: /tmp/export.html");
+		});
+		const showExtensionConfirm = vi.fn(async () => true);
+		const showStatus = vi.fn();
+		const showError = vi.fn();
+		const handleFatalRuntimeError = vi.fn(async () => {
+			throw new Error("unexpected fatal error");
+		});
+
+		const context: ImportCommandContext = {
+			clearStatusIndicator: vi.fn(),
+			runtimeHost: { importFromJsonl },
+			showError,
+			showStatus,
+			showExtensionConfirm,
+			handleRuntimeSessionChange: vi.fn(async () => {}),
+			renderCurrentSessionState: vi.fn(),
+			handleFatalRuntimeError,
+			promptForMissingSessionCwd: vi.fn(async () => undefined),
+			getPathCommandArgument: interactiveModePrototype.getPathCommandArgument,
+		};
+
+		await interactiveModePrototype.handleImportCommand.call(context, "/import /tmp/export.html");
+
+		expect(showError).toHaveBeenCalledWith(
+			"Failed to import session: Session file is not a valid pi session: /tmp/export.html",
+		);
 		expect(handleFatalRuntimeError).not.toHaveBeenCalled();
 	});
 });
